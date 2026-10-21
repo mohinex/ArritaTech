@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "dev": "vite --host 0.0.0.0 --port 3000",
     "build": "vite build && node ../scripts/generate-seo.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview --host 0.0.0.0 --port 3000"
   },
   "dependencies": {
     "react": "^19.0.0",
