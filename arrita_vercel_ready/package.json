@@ -1,0 +1,29 @@
+{
+  "name": "arrita-digital-fullstack",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run build -w frontend && npm run dev -w backend",
+    "desktop:dev": "concurrently -k \"npm run dev -w backend\" \"npm run dev -w frontend\" \"npm run dev -w desktop\"",
+    "build": "npm run build -w frontend && npm run build -w backend",
+    "start": "npm run start -w backend",
+    "desktop:build": "npm run build && electron-builder --config electron-builder.json --dir",
+    "test": "npm run test -w backend",
+    "build:vercel": "npm run build -w frontend && node scripts/generate-seo.mjs",
+    "check:deploy": "node scripts/check-deploy.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "desktop/main.cjs",
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
