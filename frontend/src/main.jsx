@@ -1,6 +1,7 @@
 import React,{useEffect,useState,useCallback} from 'react';
 import{createRoot}from'react-dom/client';
 import{originalMarkup}from'./originalMarkup';
+import{pageMarkup}from'./pageMarkup';
 import './original.css';
 import './enhancements.css';
 
@@ -33,7 +34,7 @@ function ContactModal({close}){
  };
  return <div className="arrita-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}><div role="dialog" aria-modal="true" aria-labelledby="inquiry-title" className="arrita-modal"><button type="button" className="arrita-close" onClick={close} aria-label="Close">×</button><div className="eyebrow">Your next big move</div><h2 id="inquiry-title">Start a project<span style={{color:'var(--red)'}}>.</span></h2><form onSubmit={submit}><label>Name *<input required maxLength="120" name="name" value={form.name} onChange={update}/></label><label>Email *<input type="email" required maxLength="254" name="email" value={form.email} onChange={update}/></label><label>Company<input maxLength="150" name="company" value={form.company} onChange={update}/></label><label>Service<select name="service" value={form.service} onChange={update}><option value="">Select a service</option>{['Custom Software','Web & Mobile Apps','UI/UX & Product Design','Cloud & DevOps','AI & Automation','Digital Consulting'].map(v=><option key={v}>{v}</option>)}</select></label><label>Project details *<textarea required minLength="10" maxLength="5000" rows="4" name="message" value={form.message} onChange={update}/></label><button className="btn red" type="submit" disabled={busy}>{busy?'Submitting…':'Send inquiry ↗'}</button><p role="status" aria-live="polite">{status}</p></form></div></div>;
 }
-function Landing(){const[modal,setModal]=useState(false);const close=useCallback(()=>setModal(false),[]);
+function Landing({markup=originalMarkup}){const[modal,setModal]=useState(false);const close=useCallback(()=>setModal(false),[]);
  useEffect(()=>{
   const year=document.getElementById('year');if(year)year.textContent=new Date().getFullYear();
   const menuBtn=document.getElementById('menuBtn'),navLinks=document.getElementById('navLinks');
@@ -42,11 +43,11 @@ function Landing(){const[modal,setModal]=useState(false);const close=useCallback
   const navHandlers=Array.from(navLinks.querySelectorAll('a')).map(a=>{const h=()=>{navLinks.classList.remove('open');menuBtn.setAttribute('aria-expanded','false');menuBtn.textContent='☰'};a.addEventListener('click',h);return()=>a.removeEventListener('click',h)});
   const io='IntersectionObserver' in window?new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target)}}),{threshold:.12}):null;document.querySelectorAll('.reveal').forEach(el=>io?io.observe(el):el.classList.add('visible'));
   const projectLink=document.querySelector('.cta .btn');
-  const onProject=e=>{e.preventDefault();setModal(true)};projectLink.addEventListener('click',onProject);
-  const sync=()=>{syncPending().catch(console.error)};window.addEventListener('online',sync);sync();
-  return()=>{menuBtn.removeEventListener('click',onMenu);navHandlers.forEach(f=>f());projectLink.removeEventListener('click',onProject);window.removeEventListener('online',sync);io?.disconnect()}
+  const onProject=e=>{e.preventDefault();setModal(true)};if(projectLink)projectLink.addEventListener('click',onProject);
+  const onCards=e=>{const card=e.target.closest('[data-href]');if(card&&!e.target.closest('a'))window.location.href=card.dataset.href};const onCardKeys=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-href]')){e.preventDefault();window.location.href=e.target.dataset.href}};document.addEventListener('click',onCards);document.addEventListener('keydown',onCardKeys);const sync=()=>{syncPending().catch(console.error)};window.addEventListener('online',sync);sync();
+  return()=>{menuBtn.removeEventListener('click',onMenu);navHandlers.forEach(f=>f());if(projectLink)projectLink.removeEventListener('click',onProject);window.removeEventListener('online',sync);document.removeEventListener('click',onCards);document.removeEventListener('keydown',onCardKeys);io?.disconnect()}
  },[]);
- return <><div dangerouslySetInnerHTML={{__html:originalMarkup}}/>{modal&&<ContactModal close={close}/>}</>;
+ return <><div dangerouslySetInnerHTML={{__html:markup}}/>{modal&&<ContactModal close={close}/>}</>;
 }
 function Admin(){
  const[token,setToken]=useState(sessionStorage.getItem('arrita_admin_token')||'');const[typed,setTyped]=useState('');const[items,setItems]=useState([]);const[error,setError]=useState('');const[loading,setLoading]=useState(false);
@@ -59,8 +60,13 @@ function Admin(){
  return <div className="admin-shell"><header className="admin-top"><a href="/"><img src="/arrita-wordmark.png" alt="Arrita"/></a><a href="/">← Website</a></header><main className="admin-main"><div className="eyebrow">Administration</div><h1>Inquiry dashboard<span style={{color:'var(--red)'}}>.</span></h1>{!token?<form onSubmit={login} className="admin-login"><label>Admin token<input type="password" autoComplete="off" required value={typed} onChange={e=>setTyped(e.target.value)}/></label><button className="btn red">Sign in</button></form>:<><div className="admin-toolbar"><span>{items.length} inquiries</span><button className="btn" onClick={refresh} disabled={loading}>Refresh</button><button className="btn" onClick={()=>{sessionStorage.removeItem('arrita_admin_token');setToken('');setItems([])}}>Sign out</button></div>{error&&<p role="alert">{error}</p>}<div className="admin-table-wrap"><table><thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Company</th><th>Service</th><th>Message</th><th>Status</th><th>Actions</th></tr></thead><tbody>{items.map(i=><tr key={i.id}><td>{new Date(i.created_at).toLocaleString()}</td><td>{i.name}</td><td><a href={`mailto:${i.email}`}>{i.email}</a></td><td>{i.company||'—'}</td><td>{i.service||'—'}</td><td className="message-cell">{i.message}</td><td><select aria-label={`Status for ${i.name}`} value={i.status} onChange={e=>update(i.id,e.target.value)}>{['new','in_progress','closed'].map(v=><option key={v} value={v}>{v}</option>)}</select></td><td><button onClick={()=>remove(i.id)}>Delete</button></td></tr>)}</tbody></table>{!items.length&&!loading&&<p>No inquiries.</p>}</div></>}</main></div>
 }
 function NotFound(){return <main style={{minHeight:'100vh',display:'grid',placeContent:'center',gap:20,textAlign:'center',padding:24}}><h1>404 — Page not found</h1><a href="/">Return home</a></main>}
-const route=window.location.pathname.replace(/\/+$/,'')||'/';
-if(route==='/admin'||route!=='/'){
+const rawRoute=decodeURI(window.location.pathname).replace(/\/+$/,'')||'/';
+const route=Object.keys(pageMarkup).find(p=>p.toLowerCase()===rawRoute.toLowerCase())||rawRoute;
+if(route==='/admin'||(route!=='/'&&!pageMarkup[route])){
  const robots=document.createElement('meta');robots.name='robots';robots.content='noindex,nofollow';document.head.appendChild(robots);
 }
-createRoot(document.getElementById('root')).render(route==='/admin'?<Admin/>:route==='/'?<Landing/>:<NotFound/>);
+if(pageMarkup[route]){
+ document.title=`${pageMarkup[route].title} | Arrita Digital`;
+ const description=document.querySelector('meta[name="description"]');if(description)description.content=pageMarkup[route].description;
+}
+createRoot(document.getElementById('root')).render(route==='/admin'?<Admin/>:route==='/'?<Landing/>:pageMarkup[route]?<Landing markup={pageMarkup[route].markup}/>:<NotFound/>);
