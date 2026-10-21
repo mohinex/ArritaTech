@@ -1,6 +1,7 @@
 import {writeFileSync, rmSync, readFileSync, mkdirSync} from 'node:fs';
-import {resolve} from 'node:path';
-const out=resolve('frontend/dist');
+import {resolve, dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+const out=resolve(dirname(fileURLToPath(import.meta.url)), '../frontend/dist');
 const raw=process.env.SITE_URL?.trim();
 if(!raw){rmSync(resolve(out,'sitemap.xml'),{force:true});process.exit(0)}
 const url=new URL(raw);
