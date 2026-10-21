@@ -12,5 +12,6 @@ mkdirSync(out,{recursive:true});
 writeFileSync(resolve(out,'sitemap.xml'),xml);
 const page=resolve(out,'index.html');
 let html=readFileSync(page,'utf8');
+html=html.replaceAll('content="/og-preview.png"', `content="${base}/og-preview.png"`);
 html=html.replace('</head>',`<link rel="canonical" href="${base}/"><meta property="og:url" content="${base}/"></head>`);
 writeFileSync(page,html);
