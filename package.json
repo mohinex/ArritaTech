@@ -12,7 +12,9 @@
     "build": "npm run build -w frontend && npm run build -w backend",
     "start": "npm run start -w backend",
     "desktop:build": "npm run build && electron-builder --config electron-builder.json --dir",
-    "test": "npm run test -w backend"
+    "test": "npm run test -w backend",
+    "build:vercel": "npm run build -w frontend && node scripts/generate-seo.mjs",
+    "check:deploy": "node scripts/check-deploy.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

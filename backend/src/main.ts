@@ -15,7 +15,7 @@ function validate(raw:any){
  if(name.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||message.length<10||! /^[a-zA-Z0-9-]{8,100}$/.test(client_id))throw new BadRequestException('Name, valid email and message (10+ characters) required');
  return {name,email,company,service,message,client_id};
 }
-function verify(token:string|undefined){const required=process.env.ADMIN_TOKEN||'admin';const supplied=token?.replace(/^Bearer\s+/i,'')||'';const a=Buffer.from(supplied),b=Buffer.from(required);if(a.length!==b.length||!crypto.timingSafeEqual(a,b))throw new ForbiddenException('Invalid admin token')}
+function verify(token:string|undefined){const required=process.env.ADMIN_TOKEN;if(!required||required==='admin'||required.length<24)throw new ForbiddenException('Admin authentication not configured');const supplied=token?.replace(/^Bearer\s+/i,'')||'';const a=Buffer.from(supplied),b=Buffer.from(required);if(a.length!==b.length||!crypto.timingSafeEqual(a,b))throw new ForbiddenException('Invalid admin token')}
 @Controller('api')class ApiController{
  constructor(@Inject(DbService) private db:DbService){}
  @Get('health')health(){return {ok:true,database:this.db.mode,time:new Date().toISOString()}}

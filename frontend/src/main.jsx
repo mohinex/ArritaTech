@@ -12,7 +12,7 @@ const api=async(path,options={})=>{
 };
 const storeKey='arrita_pending_inquiries';
 const pending=()=>{try{return JSON.parse(localStorage.getItem(storeKey)||'[]')}catch{return []}};
-const savePending=(items)=>localStorage.setItem(storeKey,JSON.stringify(items));
+const savePending=(items)=>{try{localStorage.setItem(storeKey,JSON.stringify(items))}catch{throw Error('Offline storage is unavailable')}};
 async function syncPending(){
  let items=pending();let remainder=[];
  for(const item of items){try{await api('/inquiries',{method:'POST',body:JSON.stringify(item)})}catch{remainder.push(item)}}
@@ -28,23 +28,23 @@ function ContactModal({close}){
   e.preventDefault();setBusy(true);setStatus('');
   const payload={...form,clientId:crypto.randomUUID()};
   try{await api('/inquiries',{method:'POST',body:JSON.stringify(payload)});setStatus('Inquiry submitted successfully.');setForm({name:'',email:'',company:'',service:'',message:''});}
-  catch(err){if(!navigator.onLine||err instanceof TypeError){savePending([...pending(),payload]);setStatus('Saved offline. Will send when connectivity returns.');setForm({name:'',email:'',company:'',service:'',message:''});}else setStatus(err.message)}
+  catch(err){if(!navigator.onLine||err instanceof TypeError){try{savePending([...pending(),payload]);setStatus('Saved offline in this browser. Will retry when online.');setForm({name:'',email:'',company:'',service:'',message:''});}catch{setStatus('Network unavailable and offline storage failed. Please retry.');}}else setStatus(err.message)}
   finally{setBusy(false)};
  };
  return <div className="arrita-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}><div role="dialog" aria-modal="true" aria-labelledby="inquiry-title" className="arrita-modal"><button type="button" className="arrita-close" onClick={close} aria-label="Close">×</button><div className="eyebrow">Your next big move</div><h2 id="inquiry-title">Start a project<span style={{color:'var(--red)'}}>.</span></h2><form onSubmit={submit}><label>Name *<input required maxLength="120" name="name" value={form.name} onChange={update}/></label><label>Email *<input type="email" required maxLength="254" name="email" value={form.email} onChange={update}/></label><label>Company<input maxLength="150" name="company" value={form.company} onChange={update}/></label><label>Service<select name="service" value={form.service} onChange={update}><option value="">Select a service</option>{['Custom Software','Web & Mobile Apps','UI/UX & Product Design','Cloud & DevOps','AI & Automation','Digital Consulting'].map(v=><option key={v}>{v}</option>)}</select></label><label>Project details *<textarea required minLength="10" maxLength="5000" rows="4" name="message" value={form.message} onChange={update}/></label><button className="btn red" type="submit" disabled={busy}>{busy?'Submitting…':'Send inquiry ↗'}</button><p role="status" aria-live="polite">{status}</p></form></div></div>;
 }
 function Landing(){const[modal,setModal]=useState(false);const close=useCallback(()=>setModal(false),[]);
  useEffect(()=>{
-  document.getElementById('year').textContent=new Date().getFullYear();
+  const year=document.getElementById('year');if(year)year.textContent=new Date().getFullYear();
   const menuBtn=document.getElementById('menuBtn'),navLinks=document.getElementById('navLinks');
   const onMenu=()=>{const open=navLinks.classList.toggle('open');menuBtn.setAttribute('aria-expanded',String(open));menuBtn.textContent=open?'×':'☰'};
   menuBtn.addEventListener('click',onMenu);
   const navHandlers=Array.from(navLinks.querySelectorAll('a')).map(a=>{const h=()=>{navLinks.classList.remove('open');menuBtn.setAttribute('aria-expanded','false');menuBtn.textContent='☰'};a.addEventListener('click',h);return()=>a.removeEventListener('click',h)});
-  const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target)}}),{threshold:.12});document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+  const io='IntersectionObserver' in window?new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target)}}),{threshold:.12}):null;document.querySelectorAll('.reveal').forEach(el=>io?io.observe(el):el.classList.add('visible'));
   const projectLink=document.querySelector('.cta .btn');
   const onProject=e=>{e.preventDefault();setModal(true)};projectLink.addEventListener('click',onProject);
-  const sync=()=>syncPending();window.addEventListener('online',sync);syncPending();
-  return()=>{menuBtn.removeEventListener('click',onMenu);navHandlers.forEach(f=>f());projectLink.removeEventListener('click',onProject);window.removeEventListener('online',sync);io.disconnect()}
+  const sync=()=>{syncPending().catch(console.error)};window.addEventListener('online',sync);sync();
+  return()=>{menuBtn.removeEventListener('click',onMenu);navHandlers.forEach(f=>f());projectLink.removeEventListener('click',onProject);window.removeEventListener('online',sync);io?.disconnect()}
  },[]);
  return <><div dangerouslySetInnerHTML={{__html:originalMarkup}}/>{modal&&<ContactModal close={close}/>}</>;
 }
