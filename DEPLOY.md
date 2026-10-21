@@ -17,7 +17,7 @@
 
 - `/` → React landing page.
 - `/admin` and `/admin/` → React inquiry dashboard.
-- Other extensionless frontend URLs → `index.html` (client-side path currently renders Landing except `/admin*`; these are **not** implemented independent pages).
+- Other extensionless frontend URLs → `index.html`; unsupported paths display a client-side 404 page (HTTP status remains 200 due to SPA fallback).
 - `/api/health` → PostgreSQL health check (503 if not configured).
 - `POST /api/inquiries` → validated inquiry create with idempotency by clientId.
 - `GET /api/admin/inquiries`, `PATCH /api/admin/inquiries/:id`, `DELETE /api/admin/inquiries/:id` → bearer-token protected.
@@ -37,3 +37,9 @@ Use a reachable hosted PostgreSQL database (Neon, Supabase, etc.). Paste its **s
 - Email delivery is not implemented. Inquiry records are saved to PostgreSQL.
 - Vercel deployment requires a live PostgreSQL service, Vercel account and connected GitHub repo; these external actions are not performed by this ZIP.
 - Run `npm install`, `npm run build -w frontend`, `node --check api/index.js` after download and smoke-test `/`, `/admin`, `/api/health` and the contact form on your deployed domain. Vercel's serverless runtime must be checked live; static checks cannot guarantee error-free deployment.
+
+## Verification limitation
+
+- A production build and live Vercel smoke test must pass before claiming zero build/runtime errors.
+- No independent dynamic detail routes were present in the uploaded source; `/` and `/admin` are the implemented pages.
+- `GET /api/health` needs a live `DATABASE_URL`; PostgreSQL network connectivity cannot be validated offline.

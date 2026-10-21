@@ -26,7 +26,7 @@ module.exports=async (req,res)=>{
  res.setHeader('Cache-Control','no-store');
  res.setHeader('X-Content-Type-Options','nosniff');
  try{
-  const path=new URL(req.url,'https://localhost').pathname.replace(/^\/api(?:\/index)?/,'')||'/';
+  const path=new URL(req.url,'https://localhost').pathname.replace(/^\/api(?:\/index)?(?=\/|$)/,'')||'/';
   if(path==='/health'&&req.method==='GET'){
    if(!process.env.DATABASE_URL)return send(res,503,{ok:false,database:'not configured'});
    await (await ready()).query('SELECT 1');return send(res,200,{ok:true,database:'postgres',time:new Date().toISOString()});
