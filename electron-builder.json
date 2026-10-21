@@ -1,0 +1,27 @@
+{
+  "appId": "com.arritadigital.app",
+  "productName": "Arrita Digital",
+  "asar": false,
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "desktop/main.cjs",
+    "frontend/dist/**/*",
+    "backend/dist/**/*",
+    "backend/package.json",
+    "node_modules/**/*",
+    "package.json",
+    "!**/test/**"
+  ],
+  "npmRebuild": true,
+  "win": {
+    "target": "nsis"
+  },
+  "linux": {
+    "target": "AppImage"
+  },
+  "mac": {
+    "target": "dmg"
+  }
+}
