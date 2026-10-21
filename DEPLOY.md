@@ -2,7 +2,7 @@
 
 1. Unzip and push the entire repository root to GitHub. Do not upload only `frontend/`.
 2. Import the repository into Vercel. Root Directory: `./`. Framework Preset: `Other`. Node.js: `22.x`.
-3. `vercel.json` specifies Build Command: `npm run build:vercel`, Output Directory: `frontend/dist`, and API Functions: `api/index.js`. Installation: `npm install`.
+3. `vercel.json` specifies Build Command: `npm run build:vercel`, Output Directory: `frontend/dist`, and API Functions: `api/index.js`. Installation: `npm install`. Only the frontend workspace is installed for Vercel; the unused NestJS backend is excluded from the deployment dependency install.
 4. Add Vercel **server-only** secrets `DATABASE_URL` (hosted PostgreSQL) and `ADMIN_TOKEN` (generate `openssl rand -hex 32`). Set in Production, and Preview if required. Never use `VITE_` prefixes for secrets. Redeploy after configuring.
 5. Optionally set `SITE_URL=https://your-real-domain` to generate a home-page sitemap; no domain is assumed.
 6. On the live deployment verify `/`, `/admin`, `/admin/`, `/api/health`, submission from the contact modal, inquiry listing and browser refresh. `/api/health` is 503 until database is configured.
@@ -24,3 +24,7 @@ npm run build:vercel
 npm run check:deploy
 node --check api/index.js
 ```
+
+## Deployment failure diagnostics
+
+If the deployment fails, open Vercel → Project → Deployments → failed deployment → Build Logs. Copy the first actual `Error:` and the command above it; configuration changes alone do not establish the cause. If the build succeeds but `/api/health` returns 503, configure `DATABASE_URL` and redeploy. Runtime function errors appear under Logs, not Build Logs.

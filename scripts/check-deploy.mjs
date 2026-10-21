@@ -4,6 +4,8 @@ const vercel=JSON.parse(readFileSync('vercel.json','utf8'));
 assert.equal(vercel.outputDirectory,'frontend/dist');
 assert(vercel.rewrites.some(x=>x.source==='/api/:path*'&&x.destination==='/api/index?route=:path*'));
 assert(vercel.rewrites.some(x=>x.source==='/admin'&&x.destination==='/index.html'));
+assert(vercel.rewrites.some(x=>x.source==='/:path*'&&x.destination==='/index.html'));
+assert(!existsSync('bun.lock'),'Remove empty bun.lock to avoid package-manager auto-detection');
 assert(existsSync('frontend/public/arrita-wordmark.png'));
 assert(existsSync('frontend/public/arrita-symbol.png'));
 assert(existsSync('api/index.js'));
